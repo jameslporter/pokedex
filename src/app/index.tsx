@@ -1,16 +1,46 @@
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, TextInput, View, type ListRenderItem } from 'react-native';
+import {
+  FlatList,
+  StyleSheet,
+  TextInput,
+  useWindowDimensions,
+  View,
+  type ListRenderItem,
+} from 'react-native';
 
-import PokemonRow, { ROW_HEIGHT } from '@/components/PokemonRow';
+import PokemonCard, { CARD_HEIGHT } from '@/components/PokemonCard';
 import { ErrorView, Loading } from '@/components/Status';
 import { fetchAllPokemon, type PokemonSummary } from '@/lib/pokeapi';
 import { useAsync } from '@/lib/useAsync';
 
-const SEPARATOR = StyleSheet.hairlineWidth;
+const GAP = 12;
+const PADDING = 16;
+const MIN_CARD_WIDTH = 300;
+const MAX_COLUMNS = 4;
+const MAX_CONTENT_WIDTH = 1280;
+
+// Rows are a fixed height, so the list never has to measure them — keeps fast scrolling smooth.
+// With numColumns, FlatList virtualizes by row, so `index` here is the row index.
+const getItemLayout = (_: unknown, index: number) => ({
+  length: CARD_HEIGHT + GAP,
+  offset: (CARD_HEIGHT + GAP) * index,
+  index,
+});
+
+const keyExtractor = (item: PokemonSummary) => String(item.id);
 
 export default function PokemonList() {
   const { status, data, error, retry } = useAsync('all-pokemon', fetchAllPokemon);
   const [query, setQuery] = useState('');
+  const { width: windowWidth } = useWindowDimensions();
+
+  // One column on phones, more as the screen widens (tablets, desktop web).
+  const contentWidth = Math.min(windowWidth, MAX_CONTENT_WIDTH) - PADDING * 2;
+  const numColumns = Math.max(
+    1,
+    Math.min(MAX_COLUMNS, Math.floor((contentWidth + GAP) / (MIN_CARD_WIDTH + GAP)))
+  );
+  const cardWidth = Math.floor((contentWidth - GAP * (numColumns - 1)) / numColumns);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase().replace(/^#0*/, '');
@@ -19,8 +49,8 @@ export default function PokemonList() {
   }, [data, query]);
 
   const renderItem = useCallback<ListRenderItem<PokemonSummary>>(
-    ({ item }) => <PokemonRow pokemon={item} />,
-    []
+    ({ item }) => <PokemonCard pokemon={item} width={cardWidth} />,
+    [cardWidth]
   );
 
   if (status === 'loading') return <Loading />;
@@ -28,7 +58,7 @@ export default function PokemonList() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchWrap}>
+      <View style={styles.searchBar}>
         <TextInput
           value={query}
           onChangeText={setQuery}
@@ -37,19 +67,24 @@ export default function PokemonList() {
           autoCapitalize="none"
           autoCorrect={false}
           clearButtonMode="while-editing"
-          style={styles.search}
+          style={[styles.search, { width: contentWidth }]}
         />
       </View>
       <FlatList
+        // FlatList can't change numColumns in place; remount when the breakpoint changes.
+        key={numColumns}
         data={filtered}
+        numColumns={numColumns}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         getItemLayout={getItemLayout}
-        ItemSeparatorComponent={Separator}
+        columnWrapperStyle={numColumns > 1 ? styles.columns : undefined}
+        contentContainerStyle={[styles.listContent, { width: contentWidth }]}
+        style={styles.list}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
-        initialNumToRender={15}
-        maxToRenderPerBatch={20}
+        initialNumToRender={12}
+        maxToRenderPerBatch={16}
         windowSize={11}
         removeClippedSubviews
       />
@@ -57,34 +92,27 @@ export default function PokemonList() {
   );
 }
 
-const keyExtractor = (item: PokemonSummary) => String(item.id);
-
-// Fixed row heights let the list skip measuring each row, which keeps fast scrolling smooth.
-const getItemLayout = (_: unknown, index: number) => ({
-  length: ROW_HEIGHT,
-  offset: (ROW_HEIGHT + SEPARATOR) * index,
-  index,
-});
-
-function Separator() {
-  return <View style={styles.separator} />;
-}
-
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  searchWrap: {
-    paddingHorizontal: 16,
+  container: { flex: 1, backgroundColor: '#f2f2f7' },
+  searchBar: {
+    alignItems: 'center',
     paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#d1d1d6',
+    backgroundColor: '#f2f2f7',
   },
   search: {
-    backgroundColor: '#f2f2f7',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     fontSize: 16,
     color: '#1c1c1e',
   },
-  separator: { height: SEPARATOR, marginLeft: 84, backgroundColor: '#d1d1d6' },
+  list: { flex: 1 },
+  listContent: {
+    alignSelf: 'center',
+    paddingTop: 8,
+    paddingBottom: 32,
+    gap: GAP,
+  },
+  columns: { gap: GAP },
 });

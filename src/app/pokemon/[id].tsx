@@ -157,7 +157,7 @@ function Badge({ label }: { label: string }) {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: 48 },
+  content: { paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' },
   hero: { alignItems: 'center', paddingTop: 16, paddingBottom: 24, paddingHorizontal: 16 },
   artwork: { width: 240, height: 240 },
   number: { fontSize: 15, color: '#636366', fontVariant: ['tabular-nums'], marginTop: 8 },
