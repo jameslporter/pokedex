@@ -15,7 +15,8 @@ import {
 } from 'react-native';
 
 import FavoriteButton from '@/components/FavoriteButton';
-import { useFavorites, type Favorite } from '@/lib/favorites';
+import { Loading } from '@/components/Status';
+import { useFavorites, useFavoritesLoaded, type Favorite } from '@/lib/favorites';
 import { artworkUrl, fetchPokemonDetails, formatId, formatName, TYPE_COLORS } from '@/lib/pokeapi';
 import { useAsync } from '@/lib/useAsync';
 
@@ -27,6 +28,7 @@ const keyExtractor = (item: Favorite) => String(item.id);
 
 export default function FavoritesScreen() {
   const favorites = useFavorites();
+  const loaded = useFavoritesLoaded();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [scrollX] = useState(() => new Animated.Value(0));
   const [activeIndex, setActiveIndex] = useState(0);
@@ -64,6 +66,8 @@ export default function FavoritesScreen() {
     },
     [cardWidth, cardHeight, artSize, interval, scrollX]
   );
+
+  if (!loaded) return <Loading />;
 
   if (favorites.length === 0) {
     return (

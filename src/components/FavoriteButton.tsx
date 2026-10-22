@@ -12,7 +12,7 @@ function FavoriteButton({ pokemon, size = 28 }: Props) {
 
   return (
     <Pressable
-      onPress={() => toggleFavorite(pokemon)}
+      onPress={() => void toggleFavorite(pokemon)}
       hitSlop={10}
       accessibilityRole="button"
       accessibilityState={{ selected: starred }}
