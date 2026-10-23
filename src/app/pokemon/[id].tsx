@@ -1,20 +1,21 @@
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import EvolutionChain from '@/components/EvolutionChain';
 import FavoriteButton from '@/components/FavoriteButton';
 import { ErrorView, Loading } from '@/components/Status';
+import TypeMatchups from '@/components/TypeMatchups';
 import {
   artworkUrl,
-  fetchPokemonDetails,
   formatId,
   formatName,
   TYPE_COLORS,
   type Pokemon,
   type PokemonSpecies,
 } from '@/lib/pokeapi';
-import { useAsync } from '@/lib/useAsync';
+import { usePokemonDetails } from '@/lib/usePokemonDetails';
 
 const STAT_LABELS: Record<string, string> = {
   hp: 'HP',
@@ -28,7 +29,7 @@ const MAX_STAT = 255;
 
 export default function PokemonDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { status, data, error, retry } = useAsync(`pokemon-${id}`, () => fetchPokemonDetails(id));
+  const { status, data, error, retry } = usePokemonDetails(id);
 
   if (status === 'loading') return <Loading />;
   if (status === 'error') return <ErrorView message={error.message} onRetry={retry} />;
@@ -46,7 +47,7 @@ export default function PokemonDetailScreen() {
       />
 
       <View style={[styles.hero, { backgroundColor: primaryColor + '33' }]}>
-        <Image source={{ uri: artworkUrl(pokemon.id) }} style={styles.artwork} resizeMode="contain" />
+        <Image source={artworkUrl(pokemon.id)} style={styles.artwork} contentFit="contain" transition={200} />
         <Text style={styles.number}>{formatId(pokemon.id)}</Text>
         <Text style={styles.name}>{formatName(pokemon.name)}</Text>
         {genus(species) ? <Text style={styles.genus}>{genus(species)}</Text> : null}
@@ -76,6 +77,10 @@ export default function PokemonDetailScreen() {
           />
         </Section>
       ) : null}
+
+      <Section title="Type matchups">
+        <TypeMatchups types={pokemon.types.map((t) => t.type.name)} />
+      </Section>
 
       <Section title="Profile">
         <InfoRow label="Height" value={`${(pokemon.height / 10).toFixed(1)} m`} />

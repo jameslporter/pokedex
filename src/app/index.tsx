@@ -4,6 +4,7 @@ import {
   FlatList,
   Platform,
   StyleSheet,
+  Text,
   TextInput,
   useWindowDimensions,
   View,
@@ -12,10 +13,10 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 
+import ListFilters from '@/components/ListFilters';
 import PokemonCard, { CARD_HEIGHT } from '@/components/PokemonCard';
 import { ErrorView, Loading } from '@/components/Status';
-import { fetchAllPokemon, type PokemonSummary } from '@/lib/pokeapi';
-import { useAsync } from '@/lib/useAsync';
+import { usePokedexIndex, type IndexedPokemon } from '@/lib/pokedexIndex';
 
 const GAP = 12;
 const PADDING = 16;
@@ -31,20 +32,47 @@ const getItemLayout = (_: unknown, index: number) => ({
   index,
 });
 
-const keyExtractor = (item: PokemonSummary) => String(item.id);
+const keyExtractor = (item: IndexedPokemon) => String(item.id);
 
 // Kept outside the component so the list comes back where it was even if the screen remounts.
-const savedList = { query: '', offset: 0 };
+const savedList = { query: '', offset: 0, types: [] as string[], generation: null as number | null };
+
+// Two types narrow to dual-type Pokémon; picking a third replaces the oldest pick.
+const MAX_TYPES = 2;
 
 export default function PokemonList() {
-  const { status, data, error, retry } = useAsync('all-pokemon', fetchAllPokemon);
+  const { status, data, error, retry } = usePokedexIndex();
   const [query, setQuery] = useState(savedList.query);
+  const [types, setTypes] = useState(savedList.types);
+  const [generation, setGeneration] = useState(savedList.generation);
   const { width: windowWidth } = useWindowDimensions();
-  const listRef = useRef<FlatList<PokemonSummary>>(null);
+  const listRef = useRef<FlatList<IndexedPokemon>>(null);
 
   const onChangeQuery = useCallback((text: string) => {
     setQuery(text);
     savedList.query = text;
+  }, []);
+
+  const onToggleType = useCallback((type: string) => {
+    setTypes((current) => {
+      const next = current.includes(type)
+        ? current.filter((t) => t !== type)
+        : [...current, type].slice(-MAX_TYPES);
+      savedList.types = next;
+      return next;
+    });
+  }, []);
+
+  const onSelectGeneration = useCallback((n: number | null) => {
+    setGeneration(n);
+    savedList.generation = n;
+  }, []);
+
+  const onClearFilters = useCallback(() => {
+    setTypes([]);
+    setGeneration(null);
+    savedList.types = [];
+    savedList.generation = null;
   }, []);
 
   const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -74,12 +102,17 @@ export default function PokemonList() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase().replace(/^#0*/, '');
-    if (!data || !q) return data ?? [];
-    return data.filter((p) => p.name.includes(q) || String(p.id) === q);
-  }, [data, query]);
+    if (!data) return [];
+    return data.pokemon.filter(
+      (p) =>
+        (!q || p.name.includes(q) || String(p.id) === q) &&
+        (generation === null || p.generation === generation) &&
+        types.every((t) => p.types.includes(t))
+    );
+  }, [data, query, types, generation]);
 
-  const renderItem = useCallback<ListRenderItem<PokemonSummary>>(
-    ({ item }) => <PokemonCard pokemon={item} width={cardWidth} />,
+  const renderItem = useCallback<ListRenderItem<IndexedPokemon>>(
+    ({ item }) => <PokemonCard pokemon={item} types={item.types} width={cardWidth} />,
     [cardWidth]
   );
 
@@ -98,6 +131,16 @@ export default function PokemonList() {
           autoCorrect={false}
           clearButtonMode="while-editing"
           style={[styles.search, { width: contentWidth }]}
+        />
+        <ListFilters
+          width={contentWidth}
+          types={types}
+          onToggleType={onToggleType}
+          generations={data.generations}
+          generation={generation}
+          onSelectGeneration={onSelectGeneration}
+          resultCount={filtered.length}
+          onClear={onClearFilters}
         />
       </View>
       <FlatList
@@ -120,6 +163,7 @@ export default function PokemonList() {
         maxToRenderPerBatch={16}
         windowSize={11}
         removeClippedSubviews
+        ListEmptyComponent={<Text style={styles.empty}>No Pokémon match these filters.</Text>}
       />
     </View>
   );
@@ -130,6 +174,7 @@ const styles = StyleSheet.create({
   searchBar: {
     alignItems: 'center',
     paddingVertical: 8,
+    gap: 10,
     backgroundColor: '#f2f2f7',
   },
   search: {
@@ -148,4 +193,5 @@ const styles = StyleSheet.create({
     gap: GAP,
   },
   columns: { gap: GAP },
+  empty: { textAlign: 'center', color: '#636366', fontSize: 16, paddingVertical: 32 },
 });

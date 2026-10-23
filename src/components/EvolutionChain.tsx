@@ -1,9 +1,10 @@
 import { Link } from 'expo-router';
-import { ActivityIndicator, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { fetchEvolutionChain, type EvolutionStage } from '@/lib/evolution';
 import { formatName, spriteUrl } from '@/lib/pokeapi';
-import { useAsync } from '@/lib/useAsync';
+import { DAY, useAsync } from '@/lib/useAsync';
 
 type Props = {
   chainUrl: string;
@@ -13,7 +14,9 @@ type Props = {
 };
 
 export default function EvolutionChain({ chainUrl, currentSpecies, color }: Props) {
-  const { status, data, retry } = useAsync(`evolution-${chainUrl}`, () => fetchEvolutionChain(chainUrl));
+  const { status, data, retry } = useAsync(`evolution-${chainUrl}`, () => fetchEvolutionChain(chainUrl), {
+    persist: { maxAgeMs: 30 * DAY },
+  });
 
   if (status === 'loading') return <ActivityIndicator style={styles.loading} />;
   if (status === 'error') {
@@ -98,7 +101,7 @@ function Stage({ stage, current, color }: { stage: EvolutionStage; current: bool
     <View
       style={[styles.stage, current && { backgroundColor: color + '33', borderColor: color }, pressed && styles.pressed]}
     >
-      <Image source={{ uri: spriteUrl(stage.id) }} style={styles.sprite} resizeMode="contain" />
+      <Image source={spriteUrl(stage.id)} style={styles.sprite} contentFit="contain" transition={150} />
       <Text style={[styles.name, current && styles.currentName]} numberOfLines={2}>
         {formatName(stage.name)}
       </Text>

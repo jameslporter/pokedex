@@ -1,8 +1,8 @@
+import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   Animated,
-  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -17,8 +17,8 @@ import {
 import FavoriteButton from '@/components/FavoriteButton';
 import { Loading } from '@/components/Status';
 import { useFavorites, useFavoritesLoaded, type Favorite } from '@/lib/favorites';
-import { artworkUrl, fetchPokemonDetails, formatId, formatName, TYPE_COLORS } from '@/lib/pokeapi';
-import { useAsync } from '@/lib/useAsync';
+import { artworkUrl, formatId, formatName, TYPE_COLORS } from '@/lib/pokeapi';
+import { usePokemonDetails } from '@/lib/usePokemonDetails';
 
 const GAP = 16;
 const MAX_CARD_WIDTH = 380;
@@ -114,7 +114,7 @@ export default function FavoritesScreen() {
 
 function FavoriteCard({ pokemon, artSize }: { pokemon: Favorite; artSize: number }) {
   // Shares the detail screen's cache, so opening a favourite afterwards is instant.
-  const { data } = useAsync(`pokemon-${pokemon.id}`, () => fetchPokemonDetails(pokemon.id));
+  const { data } = usePokemonDetails(pokemon.id);
   const types = data?.pokemon.types.map((t) => t.type.name) ?? [];
   const color = TYPE_COLORS[types[0]] ?? FALLBACK_COLOR;
 
@@ -127,9 +127,10 @@ function FavoriteCard({ pokemon, artSize }: { pokemon: Favorite; artSize: number
             <View style={[styles.cardInner, pressed && styles.pressed]}>
               <View style={styles.artworkWrap}>
                 <Image
-                  source={{ uri: artworkUrl(pokemon.id) }}
+                  source={artworkUrl(pokemon.id)}
                   style={{ width: artSize, height: artSize }}
-                  resizeMode="contain"
+                  contentFit="contain"
+                  transition={200}
                 />
               </View>
               <View style={styles.cardText}>
