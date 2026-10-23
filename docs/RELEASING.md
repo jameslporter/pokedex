@@ -40,7 +40,7 @@ works if you don't install `eas-cli` globally).
 
 ### Link the project to EAS
 
-- [x] EAS project created (slug `Pokedex`); its ID is in
+- [x] EAS project created (slug `pokedex`); its ID is in
       `extra.eas.projectId` in `app.json`. If the project lives under an Expo
       organization rather than your personal account, also add
       `"owner": "<org name>"` to `app.json`.

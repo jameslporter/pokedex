@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "pokedex",
-    "slug": "Pokedex",
+    "slug": "pokedex",
     "scheme": "pokedex",
     "version": "1.0.0",
     "orientation": "portrait",
