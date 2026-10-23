@@ -2,6 +2,7 @@
   "expo": {
     "name": "pokedex",
     "slug": "pokedex",
+    "owner": "jameslporter",
     "scheme": "pokedex",
     "version": "1.0.0",
     "orientation": "portrait",

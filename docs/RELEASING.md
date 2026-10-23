@@ -40,10 +40,8 @@ works if you don't install `eas-cli` globally).
 
 ### Link the project to EAS
 
-- [x] EAS project created (slug `pokedex`); its ID is in
-      `extra.eas.projectId` in `app.json`. If the project lives under an Expo
-      organization rather than your personal account, also add
-      `"owner": "<org name>"` to `app.json`.
+- [x] EAS project created (owner `jameslporter`, slug `pokedex`); its
+      ID is in `extra.eas.projectId` in `app.json`.
 - [ ] Check the bundle ID / package name. Both are set to
       `com.jameslporter.pokedex` in `app.json`. They can't be changed after the
       first store upload, so change them now if you want something else.
