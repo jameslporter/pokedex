@@ -1,6 +1,6 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import FavoriteButton from '@/components/FavoriteButton';
 import { ErrorView, Loading } from '@/components/Status';
@@ -92,9 +92,15 @@ export default function PokemonDetailScreen() {
             .map((m) => m.move.name)
             .sort()
             .map((name) => (
-              <View key={name} style={styles.moveChip}>
-                <Text style={styles.moveText}>{formatName(name)}</Text>
-              </View>
+              <Link key={name} href={{ pathname: '/move/[name]', params: { name } }} asChild>
+                <Pressable style={styles.moveLink}>
+                  {({ pressed }) => (
+                    <View style={[styles.moveChip, pressed && styles.pressed]}>
+                      <Text style={styles.moveText}>{formatName(name)}</Text>
+                    </View>
+                  )}
+                </Pressable>
+              </Link>
             ))}
         </View>
       </Section>
@@ -194,6 +200,8 @@ const styles = StyleSheet.create({
   statFill: { height: '100%', borderRadius: 4 },
   bold: { fontWeight: '700', color: '#1c1c1e' },
   moves: { justifyContent: 'flex-start', marginTop: 0 },
+  moveLink: Platform.select({ web: { cursor: 'pointer' }, default: {} }),
+  pressed: { opacity: 0.6 },
   moveChip: { backgroundColor: '#f2f2f7', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   moveText: { fontSize: 13, color: '#3a3a3c' },
 });
