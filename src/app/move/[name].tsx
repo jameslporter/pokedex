@@ -5,6 +5,7 @@ import { FlatList, StyleSheet, Text, useWindowDimensions, View, type ListRenderI
 import PokemonCard from '@/components/PokemonCard';
 import { ErrorView, Loading } from '@/components/Status';
 import { fetchMove, formatName, TYPE_COLORS, type Move, type PokemonSummary } from '@/lib/pokeapi';
+import { useTypesById } from '@/lib/pokedexIndex';
 import { useAsync } from '@/lib/useAsync';
 
 const GAP = 12;
@@ -19,6 +20,7 @@ export default function MoveScreen() {
   const { name } = useLocalSearchParams<{ name: string }>();
   const { status, data, error, retry } = useAsync(`move-${name}`, () => fetchMove(name));
   const { width: windowWidth } = useWindowDimensions();
+  const typesById = useTypesById();
 
   // Same responsive grid as the home list: one column on phones, more on wider screens.
   const contentWidth = Math.min(windowWidth, MAX_CONTENT_WIDTH) - PADDING * 2;
@@ -29,8 +31,8 @@ export default function MoveScreen() {
   const cardWidth = Math.floor((contentWidth - GAP * (numColumns - 1)) / numColumns);
 
   const renderItem = useCallback<ListRenderItem<PokemonSummary>>(
-    ({ item }) => <PokemonCard pokemon={item} width={cardWidth} />,
-    [cardWidth]
+    ({ item }) => <PokemonCard pokemon={item} types={typesById.get(item.id)} width={cardWidth} />,
+    [cardWidth, typesById]
   );
 
   if (status === 'loading') return <Loading />;

@@ -1,4 +1,4 @@
-const API = 'https://pokeapi.co/api/v2';
+export const API = 'https://pokeapi.co/api/v2';
 const SPRITES = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
 
 export type PokemonSummary = {
@@ -6,7 +6,7 @@ export type PokemonSummary = {
   name: string;
 };
 
-type NamedResource = { name: string; url: string };
+export type NamedResource = { name: string; url: string };
 
 export type Pokemon = {
   id: number;
@@ -72,7 +72,40 @@ export async function fetchAllPokemon(): Promise<PokemonSummary[]> {
 export async function fetchPokemonDetails(id: string | number): Promise<PokemonDetails> {
   const pokemon = await getJson<Pokemon>(`${API}/pokemon/${id}`);
   const species = await getJson<PokemonSpecies>(pokemon.species.url);
-  return { pokemon, species };
+  return { pokemon: trimPokemon(pokemon), species: trimSpecies(species) };
+}
+
+// PokéAPI responses are large (every game's sprites and move details). Keep only
+// what the app shows, so viewed Pokémon are cheap to save on the device.
+function trimPokemon(p: Pokemon): Pokemon {
+  return {
+    id: p.id,
+    name: p.name,
+    height: p.height,
+    weight: p.weight,
+    base_experience: p.base_experience,
+    types: p.types.map(({ slot, type }) => ({ slot, type })),
+    abilities: p.abilities.map(({ ability, is_hidden }) => ({ ability, is_hidden })),
+    stats: p.stats.map(({ base_stat, stat }) => ({ base_stat, stat })),
+    moves: p.moves.map(({ move }) => ({ move })),
+    species: p.species,
+  };
+}
+
+const english = (e: { language: NamedResource }) => e.language.name === 'en';
+
+function trimSpecies(s: PokemonSpecies): PokemonSpecies {
+  return {
+    genera: s.genera.filter(english),
+    flavor_text_entries: s.flavor_text_entries.filter(english).slice(0, 1),
+    is_legendary: s.is_legendary,
+    is_mythical: s.is_mythical,
+    capture_rate: s.capture_rate,
+    base_happiness: s.base_happiness,
+    habitat: s.habitat,
+    generation: s.generation,
+    evolution_chain: s.evolution_chain,
+  };
 }
 
 export async function fetchMove(name: string): Promise<MoveDetails> {
