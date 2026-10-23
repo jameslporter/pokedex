@@ -1,11 +1,15 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
+  Platform,
   StyleSheet,
   TextInput,
   useWindowDimensions,
   View,
   type ListRenderItem,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 
 import PokemonCard, { CARD_HEIGHT } from '@/components/PokemonCard';
@@ -29,10 +33,36 @@ const getItemLayout = (_: unknown, index: number) => ({
 
 const keyExtractor = (item: PokemonSummary) => String(item.id);
 
+// Kept outside the component so the list comes back where it was even if the screen remounts.
+const savedList = { query: '', offset: 0 };
+
 export default function PokemonList() {
   const { status, data, error, retry } = useAsync('all-pokemon', fetchAllPokemon);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(savedList.query);
   const { width: windowWidth } = useWindowDimensions();
+  const listRef = useRef<FlatList<PokemonSummary>>(null);
+
+  const onChangeQuery = useCallback((text: string) => {
+    setQuery(text);
+    savedList.query = text;
+  }, []);
+
+  const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    savedList.offset = e.nativeEvent.contentOffset.y;
+  }, []);
+
+  // On web, going back from a detail screen either remounts this screen (browser back / swipe)
+  // or un-hides it from `display: none` (header back), and both lose the scroll position.
+  // Put it back each time the list regains focus.
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== 'web' || savedList.offset === 0) return;
+      const frame = requestAnimationFrame(() => {
+        listRef.current?.scrollToOffset({ offset: savedList.offset, animated: false });
+      });
+      return () => cancelAnimationFrame(frame);
+    }, [])
+  );
 
   // One column on phones, more as the screen widens (tablets, desktop web).
   const contentWidth = Math.min(windowWidth, MAX_CONTENT_WIDTH) - PADDING * 2;
@@ -61,7 +91,7 @@ export default function PokemonList() {
       <View style={styles.searchBar}>
         <TextInput
           value={query}
-          onChangeText={setQuery}
+          onChangeText={onChangeQuery}
           placeholder="Search by name or number"
           placeholderTextColor="#8e8e93"
           autoCapitalize="none"
@@ -73,6 +103,9 @@ export default function PokemonList() {
       <FlatList
         // FlatList can't change numColumns in place; remount when the breakpoint changes.
         key={numColumns}
+        ref={listRef}
+        onScroll={onScroll}
+        scrollEventThrottle={32}
         data={filtered}
         numColumns={numColumns}
         keyExtractor={keyExtractor}
