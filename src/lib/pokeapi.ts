@@ -30,6 +30,7 @@ export type PokemonSpecies = {
   base_happiness: number | null;
   habitat: NamedResource | null;
   generation: NamedResource;
+  evolution_chain: { url: string } | null;
 };
 
 export type PokemonDetails = { pokemon: Pokemon; species: PokemonSpecies };
@@ -53,13 +54,13 @@ export type Move = {
 
 export type MoveDetails = { move: Move; learnedBy: PokemonSummary[] };
 
-async function getJson<T>(url: string): Promise<T> {
+export async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Request failed (${res.status})`);
   return res.json();
 }
 
-function idFromUrl(url: string): number {
+export function idFromUrl(url: string): number {
   return Number(url.split('/').filter(Boolean).pop());
 }
 
