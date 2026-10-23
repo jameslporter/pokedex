@@ -40,8 +40,10 @@ works if you don't install `eas-cli` globally).
 
 ### Link the project to EAS
 
-- [ ] `bunx eas-cli init` — creates the EAS project and writes
-      `extra.eas.projectId` (and `owner`) into `app.json`. Commit that change.
+- [x] EAS project created (slug `Pokedex`); its ID is in
+      `extra.eas.projectId` in `app.json`. If the project lives under an Expo
+      organization rather than your personal account, also add
+      `"owner": "<org name>"` to `app.json`.
 - [ ] Check the bundle ID / package name. Both are set to
       `com.jameslporter.pokedex` in `app.json`. They can't be changed after the
       first store upload, so change them now if you want something else.

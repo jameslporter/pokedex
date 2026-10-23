@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "pokedex",
-    "slug": "pokedex",
+    "slug": "Pokedex",
     "scheme": "pokedex",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -36,6 +36,11 @@
     ],
     "experiments": {
       "baseUrl": "/pokedex"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "60a35cd9-392b-4604-b31e-3ecc784aada7"
+      }
     }
   }
 }
