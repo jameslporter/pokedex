@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import FavoriteButton from '@/components/FavoriteButton';
 import { ErrorView, Loading } from '@/components/Status';
 import {
   artworkUrl,
@@ -36,7 +37,12 @@ export default function PokemonDetailScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ title: formatName(pokemon.name) }} />
+      <Stack.Screen
+        options={{
+          title: formatName(pokemon.name),
+          headerRight: () => <FavoriteButton pokemon={{ id: pokemon.id, name: pokemon.name }} size={26} />,
+        }}
+      />
 
       <View style={[styles.hero, { backgroundColor: primaryColor + '33' }]}>
         <Image source={{ uri: artworkUrl(pokemon.id) }} style={styles.artwork} resizeMode="contain" />
