@@ -20,6 +20,7 @@ export default function RootLayout() {
         />
         <Stack.Screen name="favorites" options={{ title: 'Favorites' }} />
         <Stack.Screen name="pokemon/[id]" options={{ title: '' }} />
+        <Stack.Screen name="move/[name]" options={{ title: '' }} />
       </Stack>
     </>
   );

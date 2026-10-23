@@ -34,6 +34,25 @@ export type PokemonSpecies = {
 
 export type PokemonDetails = { pokemon: Pokemon; species: PokemonSpecies };
 
+export type Move = {
+  id: number;
+  name: string;
+  accuracy: number | null;
+  power: number | null;
+  pp: number | null;
+  priority: number;
+  effect_chance: number | null;
+  type: NamedResource;
+  damage_class: NamedResource | null;
+  target: NamedResource;
+  generation: NamedResource;
+  effect_entries: { effect: string; short_effect: string; language: NamedResource }[];
+  flavor_text_entries: { flavor_text: string; language: NamedResource }[];
+  learned_by_pokemon: NamedResource[];
+};
+
+export type MoveDetails = { move: Move; learnedBy: PokemonSummary[] };
+
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Request failed (${res.status})`);
@@ -53,6 +72,14 @@ export async function fetchPokemonDetails(id: string | number): Promise<PokemonD
   const pokemon = await getJson<Pokemon>(`${API}/pokemon/${id}`);
   const species = await getJson<PokemonSpecies>(pokemon.species.url);
   return { pokemon, species };
+}
+
+export async function fetchMove(name: string): Promise<MoveDetails> {
+  const move = await getJson<Move>(`${API}/move/${name}`);
+  const learnedBy = move.learned_by_pokemon
+    .map((p) => ({ id: idFromUrl(p.url), name: p.name }))
+    .sort((a, b) => a.id - b.id);
+  return { move, learnedBy };
 }
 
 export const spriteUrl = (id: number) => `${SPRITES}/${id}.png`;
