@@ -2,17 +2,24 @@
   "expo": {
     "name": "pokedex",
     "slug": "pokedex",
+    "owner": "jameslporter",
+    "scheme": "pokedex",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.jameslporter.pokedex",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
         "RCTAsyncStorageExcludeFromBackup": false
       }
     },
     "android": {
+      "package": "com.jameslporter.pokedex",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -30,6 +37,11 @@
     ],
     "experiments": {
       "baseUrl": "/pokedex"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c8022989-1657-4bce-ba71-9a4ddd530007"
+      }
     }
   }
 }
