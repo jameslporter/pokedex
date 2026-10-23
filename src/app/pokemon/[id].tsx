@@ -2,6 +2,7 @@ import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import EvolutionChain from '@/components/EvolutionChain';
 import FavoriteButton from '@/components/FavoriteButton';
 import { ErrorView, Loading } from '@/components/Status';
 import {
@@ -63,6 +64,16 @@ export default function PokemonDetailScreen() {
       {flavorText(species) ? (
         <Section title="About">
           <Text style={styles.body}>{flavorText(species)}</Text>
+        </Section>
+      ) : null}
+
+      {species.evolution_chain ? (
+        <Section title="Evolution">
+          <EvolutionChain
+            chainUrl={species.evolution_chain.url}
+            currentSpecies={pokemon.species.name}
+            color={primaryColor}
+          />
         </Section>
       ) : null}
 
